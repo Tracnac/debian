@@ -1,15 +1,39 @@
-# Debian 11.4
+# Preview
  
 ## Base:
 ___
  
+### BTRFS subvolume for home (Timeshift)
+```shell
+btrfs subvolume list /
+btrfs subvolume create /@home
+mv /home/* /@home
+mount -o subvolid=5 /dev/... /mnt
+mv '/mnt/@rootfs/@home' /mnt
+mv '/mnt/@rootfs' '/mnt/@'
+umount /mnt
+# Update fstab to reflect change... duplicate rootfs and change to @ and @home
+vi /etc/fstab
+dpkg-reconfigure grub-pc
+reboot
+# dpkg-reconfigure grub-efi-amd64
+```
+
+### Configuration
+```shell
+usermod -g users tracnac
+chmod -R tracnac:users /home/tracnac
+sed -i 's/^# fr_FR.UTF-8 UTF-8/fr_FR.UTF-8 UTF-8/' /etc/locale.gen
+locale-gen
+```
+
 ### Sysadmin tools
 ```shell
 apt install software-properties-common
 apt-add-repository non-free
 apt-add-repository contrib
 apt update
-apt install bash-completion git vim tmux build-essential ca-certificates curl wget gnupg lsb-release uuid-runtime cmake apt-transport-https pkg-config pinentry pass pass-git-helper git-crypt
+apt install bash-completion git vim tmux build-essential ca-certificates curl wget gnupg lsb-release uuid-runtime cmake apt-transport-https pkg-config pinentry-gnome3 pass pass-git-helper git-crypt
 ```
  
 ### Firmware    
@@ -19,19 +43,17 @@ apt install amd64-microcode firmware-iwlwifi firmware-realtek firmware-misc-nonf
  
 ### Daemon    
 ```shell
-apt install acpid cups cups-filters
+apt install acpid
 ```
  
 ### Gnome minimal install
 ```shell
-apt install gnome-core chrome-gnome-shell gnome-weather aspell-fr xsel xclip gnome-tweaks
+apt install gnome-core chrome-gnome-shell gnome-weather aspell-fr xsel xclip gnome-tweaks cups cups-filters
 ```
 
 ### Setup for Gnome
 ```shell
 sed -i 's/^managed=false/managed=true/' /etc/NetworkManager/NetworkManager.conf
-sed -i 's/^# fr_FR.UTF-8 UTF-8/fr_FR.UTF-8 UTF-8/' /etc/locale.gen
-locale-gen
 ```
 
 ### Nvidia
@@ -45,7 +67,6 @@ bash NVIDIA-Linux-x86_64-515.65.01.run
 ```shell
 chgrp users /opt
 chmod 0775 /opt
-usermod -g users tracnac
 ```
  
 ## Userland
@@ -80,7 +101,7 @@ apt install virtualbox-6.1
 ### Signal
 ```shell
 wget -O- https://updates.signal.org/desktop/apt/keys.asc | gpg --dearmor -o /usr/share/keyrings/signal-desktop-keyring.gpg
-echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/signal-desktop-keyring.gpg] https://updates.signal.org/desktop/apt xenial main' |  sudo tee -a /etc/apt/sources.list.d/signal-xenial.list
+echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/signal-desktop-keyring.gpg] https://updates.signal.org/desktop/apt xenial main' |  tee -a /etc/apt/sources.list.d/signal-xenial.list
 apt update
 apt install signal-desktop
 ```
@@ -99,8 +120,6 @@ wget -O- 'https://redirector.gvt1.com/edgedl/android/studio/ide-zips/2021.2.1.16
  
 ### Firefox
 ```shell
-apt remove firefox
-apt autoremove
 wget -O- --content-disposition 'https://download.mozilla.org/?product=firefox-latest-ssl&os=linux64&lang=en-US' | tar xjv -C /opt
 cat > /usr/share/applications/firefox-latest.desktop <<EOF
 [Desktop Entry]
@@ -119,11 +138,29 @@ Actions=Private;
 Exec=/opt/firefox/firefox --private-window %u
 Name=Open in private mode
 EOF
-cd ~
+
+# Dummy package for firefox
+apt install equivs libdbus-glib-1-2
+cat > firefox.equivs <<EOF 
+Package: firefox-esr
+Version: 99:99
+Maintainer: tracnac@devmobs.fr
+Architecture: all
+Description: dummy firefox-esr package
+EOF
+equivs-build firefox.equivs
+apt install ./firefox-esr_99_all.deb
+rm -r /etc/firefox-esr
+ln -sf /opt/firefox/firefox /etc/alternatives/x-www-browser
+ln -sf /opt/firefox/firefox /etc/alternatives/gnome-www-browser
+rm /etc/alternatives/gnome-www-browser.1.gz
+rm /etc/alternatives/x-www-browser.1.gz
+apt remove equivs
 ```
 
 ### Thunderbird
 ```shell
+apt install libbotan-2-17 libtspi1 libdbus-glib-1-2
 wget -O- --content-disposition 'https://download.mozilla.org/?product=thunderbird-latest-SSL&os=linux64&lang=en-US' | tar xjv -C /opt
 cat > /usr/share/applications/thunderbird-latest.desktop <<EOF
 [Desktop Entry]
@@ -135,14 +172,13 @@ Terminal=false
 X-MultipleArgs=false
 Type=Application
 Version=1.0
-Icon=/opt/thunderbird/browser/chrome/icons/default/default128.png
+Icon=/opt/thunderbird/chrome/icons/default/default128.png
 Categories=Network;Email;News;GTK;
 MimeType=message/rfc822;x-scheme-handler/mailto;text/calendar;text/x-vcard;
 StartupWMClass=thunderbird
 StartupNotify=true
 Keywords=EMail;E-mail;Contact;Addressbook;News;
 EOF
-cd ~
 ```
 
 ### Lang
@@ -150,9 +186,9 @@ cd ~
 apt install valac golang clang clang-format clang-tools strace autoconf automake rr lldb 
 ```
  
-### Music
+### Music & Video
 ```shell
-apt install mpd mpc
+apt install mpd mpc mpv
 chown mpd:audio /var/lib/mpd/{music,playlists}
 chmod 0775 /var/lib/mpd/{music,playlists}
 cat > /var/lib/mpd/playlists/radioparadise.m3u <<EOF
@@ -164,4 +200,5 @@ EOF
 
 TODO:
 - Audio output for MPD
+- Firefox check...
 - Rework
