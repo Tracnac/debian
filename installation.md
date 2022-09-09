@@ -215,8 +215,8 @@ apt install mpd mpc mpv
 systemctl disable --now mpd
 
 mkdir /opt/Music/{Albums,Playlists}
-chown mpd:audio /var/lib/mpd/{music,playlists}
-chmod 0775 /var/lib/mpd/{music,playlists}
+chown root:audio /opt/Music/{Albums,Playlists}
+chmod 0775 /opt/Music/{Albums,Playlists}
 
 mkdir /home/tracnac/.config/mpd
 cat > /home/tracnac/.config/mpd/mpd.conf << EOF
