@@ -212,16 +212,48 @@ apt install valac golang clang clang-format clang-tools strace autoconf automake
 ### Music & Video
 ```shell
 apt install mpd mpc mpv
+systemctl disable --now mpd
+
+mkdir /opt/Music/{Albums,Playlists}
 chown mpd:audio /var/lib/mpd/{music,playlists}
 chmod 0775 /var/lib/mpd/{music,playlists}
-cat > /var/lib/mpd/playlists/radioparadise.m3u <<EOF
+
+mkdir /home/tracnac/.config/mpd
+cat > /home/tracnac/.config/mpd/mpd.conf << EOF
+music_directory		"/opt/Music/Albums"
+playlist_directory	"/opt/Music/Playlists"
+
+db_file			"/home/tracnac/.config/mpd/tag_cache"
+log_file		"/home/tracnac/.config/mpd/mpd.log"
+pid_file		"/home/tracnac/.config/mpd/pid"
+state_file		"/home/tracnac/.config/mpd/state"
+sticker_file    "/home/tracnac/.config/mpd/sticker.sql"
+bind_to_address		"localhost"
+
+auto_update         "yes"
+input {
+        plugin "curl"
+}
+audio_output {
+	type		"pulse"
+	name		"MPD output"
+}
+filesystem_charset	"UTF-8"
+EOF
+
+cat > /opt/Music/Playlists/radioparadise.m3u <<EOF
 #EXTM3U
 #EXTINF:0,Radio Paradise
 https://stream.radioparadise.com/aac-320
 EOF
+
+# As user
+# systemctl --user enable mpd
+# systemctl --user start mpd
 ```
 
 TODO:
-- Audio output for MPD
-- Firefox check...
+- Fonts
 - Rework
+- Sudo
+- Create shell scripts
