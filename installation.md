@@ -27,6 +27,29 @@ sed -i 's/^# fr_FR.UTF-8 UTF-8/fr_FR.UTF-8 UTF-8/' /etc/locale.gen
 locale-gen
 ```
 
+### Mail
+```shell
+apt install bsd-mailx msmtp exim4-base- ssmtp- sendmail-base- opensmtpd- nullmailer-
+cat > /etc/msmtprc << EOF
+account default
+auth on
+host smtp.mailfence.com
+from tracnac@devmobs.fr
+user ********
+password ********
+tls on
+tls_starttls off
+tls_trust_file /etc/ssl/certs/ca-certificates.crt
+aliases /etc/aliases
+syslog LOG_MAIL
+EOF
+cat > /etc/aliases << EOF
+default: tracnac@devmobs.fr
+EOF
+chown root:mail /etc/msmtprc /etc/aliases
+chmod 0640 /etc/msmtprc /etc/aliases
+```
+
 ### Sysadmin tools
 ```shell
 apt install software-properties-common
