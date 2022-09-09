@@ -92,7 +92,7 @@ chgrp users /opt
 chmod 0775 /opt
 ```
  
-## Userland
+ ## Userland
 ___
  
 ### Docker
@@ -252,8 +252,20 @@ EOF
 # systemctl --user start mpd
 ```
 
+### U2F
+```shell
+pamu2fcfg > u2f_keys
+# if backup key
+# pamu2fcfg -n > u2f_bkp_keys
+sudo sh -c 'cat u2f_keys > /etc/u2f_mappings'
+# if backup key
+# sudo sh -c 'cat u2f_keys u2f_bkp_keys > /etc/u2f_mappings'
+sudo chmod 0444 /etc/u2f_mappings
+# Add the following line to /etc/pam.d/common-auth before the first auth... 
+# auth	sufficient 			pam_u2f.so authfile=/etc/u2f_mappings
+```
+
 TODO:
 - Fonts
-- Rework
 - Sudo
 - Create shell scripts
